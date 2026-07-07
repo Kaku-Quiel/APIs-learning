@@ -61,5 +61,3 @@ def prestar_libro(id):
     return jsonify({"error": "Libro no encontrado"}), 404
 
 # 7. Iniciar el servidor (solo si se ejecuta este archivo)
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
