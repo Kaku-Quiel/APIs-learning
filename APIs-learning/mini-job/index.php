@@ -3,11 +3,9 @@ header('Content-Type: application/json');
 
 $movies = [
   ["id" => 1, "title" => "El Padrino", "director" => "Francis Ford", "date" => 1972, "genre" => "drama", "rate" => 9.2],
-  ["id" => 2, "title" => "El Perro", "director" => "Jeremy Salas", "date" => 2026, "genre" => "suspenso", "rate" => 10],
+  ["id" => 2, "title" => "El Perro", "director" => "Jeremy Salas", "date" => 2026, "genre" => "suspenso", "rate" => 10.0],
   ["id" => 3, "title" => "GOT", "director" => "Maria Isabel", "date" => 2000, "genre" => "fantasia", "rate" => 7.8]
 ];
-
-$next_id = 4;
 
 $method = $_SERVER['REQUEST_METHOD']; # Obtiene el metodo (GET, POST, PUT, DELETE)
 
@@ -55,8 +53,31 @@ if (str_starts_with($source, "movies")){
   }
 
   if ($method === "POST"){
+    $data = json_decode(file_get_contents('php://input'), true); # Obtener los datos del cuerpo de la peticion
+
+    $title = $data['title'] ?? '';
+    $director = $data['director'] ?? '';
+    $date = (int) $data['date'] ?? '';
+    $genre = $data['genre'] ?? '';
+    $rate = (float) $data['rate'] ?? 0;
+
+    $rate = ($rate > 10.0) ? 10.0 : $rate;
+
+    $date = ($date >= 1888 && $date <= (int) date('Y')) ? $date : '';
+
+    if ($title === '' || $director === '' || $date === '' || $genre === ''){
+      http_response_code(400);
+      echo json_encode(["status" => "error", "message" => "Bad request, fill all information or fill correctly"]);
+      exit;
+    }
+
+    $new_id = $movies[count($movies) - 1]['id'] + 1;
+    $new_movie = ["id" => $new_id, "title" => $title, "director" => $director, "date" => $date, "genre" => $genre, "rate" => $rate];
+    
+    $movies[] = $new_movie;
+
     http_response_code(201);
-    echo json_encode(["status" => "success", "message" => "POST Success"]);
+    echo json_encode(["status" => "success", "message" => $new_movie]);
     exit;
   }
 
