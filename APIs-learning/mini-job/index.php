@@ -55,11 +55,11 @@ if (str_starts_with($source, "movies")){
   if ($method === "POST"){
     $data = json_decode(file_get_contents('php://input'), true); # Obtener los datos del cuerpo de la peticion
 
-    $title = $data['title'] ?? '';
-    $director = $data['director'] ?? '';
-    $date = (int) $data['date'] ?? '';
-    $genre = $data['genre'] ?? '';
-    $rate = (float) $data['rate'] ?? 0;
+    $title = isset($data['title']) ? $data['title'] : '';
+    $director = isset($data['director']) ? $data['director'] : '';
+    $date = isset($data['date']) ? (int) $data['date'] : '';
+    $genre = isset($data['genre']) ? $data['genre'] : '';
+    $rate = isset($data['rate']) ? (float) $data['rate'] : 0;
 
     $rate = ($rate > 10.0) ? 10.0 : $rate;
 
@@ -82,8 +82,46 @@ if (str_starts_with($source, "movies")){
   }
 
   if ($method === "PUT"){
-    http_response_code(200);
-    echo json_encode(["status" => "success", "message" => "PUT Success"]);
+    if ($sec === ''){
+      http_response_code(404);
+      echo json_encode(["status" => "error", "message" => "Bad Request, PUT must be with an ID"]);
+      exit;
+    }
+
+    foreach ($movies as &$movie) {
+      if ($movie['id'] == $sec) {
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        $title = isset($data['title']) ? $data['title'] : $movie['title'];
+        $director = isset($data['director']) ? $data['director'] : $movie['director'];
+        $date = isset($data['date']) ? (int) $data['date'] : (int) $movie['date'];
+        $genre = isset($data['genre']) ? $data['genre'] : $movie['genre'];
+        $rate = isset($data['rate']) ? (float) $data['rate'] : (float) $movie['rate'];
+
+        $rate = ($rate > 10.0) ? 10.0 : $rate;
+
+        $date = ($date >= 1888 && $date <= (int) date('Y')) ? $date : '';
+
+        if ($date === ''){
+          http_response_code(400);
+          echo json_encode(["status" => "error", "message" => "Bad request, Date must be between 1888 and current year"]);
+          exit;
+        }
+
+        $movie['title'] = $title;
+        $movie['director'] = $director;
+        $movie['date'] = $date;
+        $movie['genre'] = $genre;
+        $movie['rate'] = $rate;
+
+        http_response_code(200);
+        echo json_encode(["status" => "success", "message" => $movie]);
+        exit;
+      }
+    }
+
+    http_response_code(404);
+    echo json_encode(["status" => "error", "message" => "Movie not found"]);
     exit;
   }
 
