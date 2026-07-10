@@ -134,8 +134,21 @@ if (str_starts_with($source, "movies")){ // /movies*
   }
 
   if ($method === "DELETE"){
-    http_response_code(204);
-    exit;
+
+    if ($sec != ''){ // DELETE /movies/{id}
+      for ($i = 0; $i <= count($movies); $i++){
+        if ($movies[$i]['id'] == $sec){
+          array_splice($movies, $i, 1); # Elimina desde el indice i, 1 elemento (solo se elimina el elemento del indice i)
+
+          http_response_code(204);
+          exit;
+        }
+      }
+      http_response_code(404);
+      echo json_encode(["status" => "error", "message" => "Movie not found"]);
+      exit;
+    }
+
   }
 }
 
